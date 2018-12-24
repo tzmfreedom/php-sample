@@ -1,0 +1,10 @@
+{% extends "base.html.twig" %}
+
+{% block title %}AppBundle:Todo:edit{% endblock %}
+
+{% block body %}
+    {{ form_start(form) }}
+    {{ form_widget(form) }}
+    {{ form_end(form) }}
+    <a href="{{ path('show_todo', {'id': id}) }}">詳細画面</a>
+{% endblock %}
