@@ -1,0 +1,12 @@
+{
+    "name": "mtajitsu/phpstan",
+    "authors": [
+        {
+            "name": "tzmfreedom",
+            "email": "makoto_tajitsu@hotmail.co.jp"
+        }
+    ],
+    "require": {
+        "phpstan/phpstan": "^0.12.29"
+    }
+}
