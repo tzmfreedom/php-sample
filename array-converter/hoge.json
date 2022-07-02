@@ -1,0 +1,15 @@
+{
+  "hoge": 1,
+  "fuga": true,
+  "foo": "hogehoge",
+  "bar": 1.56,
+  "baz": {
+    "a": 1,
+    "b": 2,
+    "c": [
+      "aaa",
+      "bbb",
+      "ccc"
+    ]
+  }
+}
