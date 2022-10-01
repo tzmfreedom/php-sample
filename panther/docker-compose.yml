@@ -1,0 +1,5 @@
+services:
+  panther:
+    build: .
+    volumes:
+      - ./:/app/
