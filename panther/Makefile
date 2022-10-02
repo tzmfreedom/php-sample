@@ -9,3 +9,7 @@ up:
 .PHONY: console
 console:
 	docker-compose exec panther /bin/bash
+
+.PHONY: init
+init:
+	vendor/bin/bdi detect drivers
