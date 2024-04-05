@@ -1,0 +1,10 @@
+services:
+	-
+		class: App\DynamicType
+		tags:
+			- phpstan.broker.dynamicMethodReturnTypeExtension
+
+	-
+		class: App\CustomMethodsClassReflectionExtension
+		tags:
+			- phpstan.broker.methodsClassReflectionExtension
