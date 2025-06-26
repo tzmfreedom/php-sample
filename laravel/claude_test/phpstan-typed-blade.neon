@@ -1,0 +1,122 @@
+services:
+    # TypedBlade関連
+    - App\PHPStan\TypedBladeTemplateParser
+    
+    typedViewDataRule:
+        class: App\PHPStan\Rules\TypedViewDataRule
+        tags:
+            - phpstan.rules.rule
+    
+    typedViewControllerDataRule:
+        class: App\PHPStan\Rules\TypedViewControllerDataRule
+        arguments:
+            - @reflectionProvider
+        tags:
+            - phpstan.rules.rule
+    
+    # 通常のBlade関連
+    - App\PHPStan\BladeTemplateParser
+    - App\PHPStan\BladeControlStructureParser
+    
+    bladeViewDataRule:
+        class: App\PHPStan\Rules\BladeViewDataRule
+        tags:
+            - phpstan.rules.rule
+    
+    bladeViewControllerDataRule:
+        class: App\PHPStan\Rules\BladeViewControllerDataRule
+        arguments:
+            - @reflectionProvider
+        tags:
+            - phpstan.rules.rule
+    
+    bladeControlStructureRule:
+        class: App\PHPStan\Rules\BladeControlStructureRule
+        tags:
+            - phpstan.rules.rule
+
+parameters:
+    # TypedBlade設定
+    typedBlade:
+        # テンプレートファイルのパス
+        templatePaths:
+            - '%currentWorkingDirectory%/resources/views/typed'
+        
+        # 型エイリアス（設定ファイルから読み込み）
+        typeAliases:
+            User: 'App\Models\User'
+            Collection: 'Illuminate\Support\Collection'
+            Model: 'Illuminate\Database\Eloquent\Model'
+            Request: 'Illuminate\Http\Request'
+        
+        # チェックを有効化する関数/メソッド
+        checkCalls:
+            staticCalls:
+                - 'App\Facades\TypedView::make'
+                - 'TypedView::make'
+            methodCalls:
+                - method: 'make'
+                  onExpression: "app('typed-view')"
+            functionCalls:
+                - 'typed_blade'
+                - 'render_typed_blade'
+        
+        # 厳密モード
+        strictMode: true
+        
+        # 未使用変数の警告
+        warnUnusedVariables: true
+        
+        # 不足変数をエラーとするか
+        missingVariablesAsErrors: true
+    
+    # 通常のBlade設定
+    blade:
+        # テンプレートファイルのパス
+        templatePaths:
+            - '%currentWorkingDirectory%/resources/views'
+        
+        # 型エイリアス
+        typeAliases:
+            User: 'App\Models\User'
+            Collection: 'Illuminate\Support\Collection'
+            Model: 'Illuminate\Database\Eloquent\Model'
+            Request: 'Illuminate\Http\Request'
+            Post: 'App\Models\Post'
+            Product: 'App\Models\Product'
+        
+        # チェックを有効化する関数/メソッド
+        checkCalls:
+            staticCalls:
+                - 'Illuminate\Support\Facades\View::make'
+                - 'View::make'
+            methodCalls:
+                - method: 'make'
+                  onExpression: "app('view')"
+            functionCalls:
+                - 'view'
+        
+        # 厳密モード
+        strictMode: true
+        
+        # 未使用変数の警告
+        warnUnusedVariables: true
+        
+        # 不足変数をエラーとするか
+        missingVariablesAsErrors: true
+        
+        # 型宣言の形式チェック
+        validateTypeDeclarations: true
+        
+        # 制御構文の型チェック
+        validateControlStructures: true
+        
+        # 制御構文でチェックする項目
+        controlStructureChecks:
+            - 'if'          # @if文の条件式
+            - 'foreach'     # @foreach文のイテレータ
+            - 'forelse'     # @forelse文のイテレータ
+            - 'while'       # @while文の条件式
+            - 'switch'      # @switch文の変数
+            - 'isset'       # @isset文の変数
+            - 'empty'       # @empty文の変数

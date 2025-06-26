@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer:*)",
+      "Bash(php artisan:*)",
+      "Bash(./vendor/bin/phpstan analyse:*)",
+      "Bash(./vendor/bin/phpstan:*)"
+    ],
+    "deny": []
+  }
+}

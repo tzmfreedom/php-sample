@@ -1,0 +1,26 @@
+includes:
+    - ./phpstan-typed-blade.neon
+
+parameters:
+    level: 8
+    paths:
+        - app
+        - resources/views/typed
+    
+    # Laravel specific paths
+    bootstrapFiles:
+        - bootstrap/app.php
+    
+    excludePaths:
+        - app/Console/Kernel.php (?)
+        - app/Http/Kernel.php (?)
+    
+    # Ignore Laravel magic methods and properties
+    ignoreErrors:
+        - '#Call to an undefined method App\\Models\\[a-zA-Z0-9\\_]+::[a-zA-Z0-9\\_]+\(\)#'
+        - '#Access to an undefined property App\\Models\\[a-zA-Z0-9\\_]+::\$[a-zA-Z0-9\\_]+#'
+    
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    
+    reportUnmatchedIgnoredErrors: false
