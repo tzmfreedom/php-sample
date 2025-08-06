@@ -33,7 +33,13 @@ export default function Password({ errors = {}, message }: PasswordProps) {
         'put', 
         {
             successMessage: 'Password updated successfully!',
-            useRefs: true,
+            withFormRef: true,
+            onSuccess: () => {
+                // refベースでフィールドをリセット
+                fieldUtils.clearField(currentPasswordRef);
+                fieldUtils.clearField(passwordRef);
+                fieldUtils.clearField(passwordConfirmationRef);
+            },
             onError: (errors) => {
                 if (errors.password) {
                     fieldUtils.clearField(passwordRef);

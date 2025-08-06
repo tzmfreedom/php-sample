@@ -21,7 +21,7 @@ export default function DeleteUser({ errors = {} }: DeleteUserProps) {
         'delete', 
         {
             successMessage: 'Account deleted successfully',
-            useRefs: true,
+            withFormRef: true,
             onError: (errors) => {
                 if (errors.password) {
                     fieldUtils.focusField(passwordRef);

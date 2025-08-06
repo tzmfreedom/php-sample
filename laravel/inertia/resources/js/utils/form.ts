@@ -4,10 +4,9 @@ import { toast } from 'sonner';
 
 interface UseFormOptions {
     successMessage?: string;
-    resetFields?: string[];
     onSuccess?: () => void;
     onError?: (errors: Record<string, string>) => void;
-    useRefs?: boolean; // refベースモードを有効にするフラグ
+    withFormRef?: boolean; // formRefを返すかどうかのフラグ
 }
 
 // React 19のuseTransitionを使用した統合フォームフック
@@ -17,10 +16,9 @@ export function useStatelessForm(url: string, method: 'get' | 'post' | 'put' | '
     
     const {
         successMessage = 'Saved!',
-        resetFields = [],
         onSuccess,
         onError,
-        useRefs = false
+        withFormRef = false
     } = options;
 
     // React 19のaction関数
@@ -35,27 +33,13 @@ export function useStatelessForm(url: string, method: 'get' | 'post' | 'put' | '
                     routerMethod(url, data, {
                         preserveScroll: true,
                         onSuccess: () => {
-                            // 指定されたフィールドをリセット
-                            if (resetFields.length > 0) {
-                                resetFields.forEach(fieldName => {
-                                    const field = document.querySelector(`[name="${fieldName}"]`) as HTMLInputElement;
-                                    if (field) field.value = '';
-                                });
-                            }
                             // トーストで成功メッセージを表示
                             toast.success(successMessage);
                             onSuccess?.();
                             resolve();
                         },
                         onError: (errors) => {
-                            // エラーがあるフィールドをクリア＆フォーカス
-                            const errorFields = Object.keys(errors);
-                            if (errorFields.length > 0) {
-                                const firstErrorField = document.querySelector(`[name="${errorFields[0]}"]`) as HTMLInputElement;
-                                if (firstErrorField) {
-                                    firstErrorField.focus();
-                                }
-                            }
+                            // エラー時の処理は各コンポーネントのonErrorで行う
                             onError?.(errors);
                             reject(new Error('Form submission failed'));
                         }
@@ -77,7 +61,7 @@ export function useStatelessForm(url: string, method: 'get' | 'post' | 'put' | '
     return {
         processing: isPending,
         action,
-        ...(useRefs && { formRef, resetForm })
+        ...(withFormRef && { formRef, resetForm })
     };
 }
 

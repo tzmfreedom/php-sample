@@ -20,8 +20,7 @@ export default function Login({ status, canResetPassword, errors = {} }: LoginPr
         route('login'), 
         'post', 
         {
-            successMessage: 'Welcome back!',
-            resetFields: ['password']
+            successMessage: 'Welcome back!'
         }
     );
 

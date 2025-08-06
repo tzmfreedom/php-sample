@@ -18,8 +18,7 @@ export default function ResetPassword({ token, email, errors = {} }: ResetPasswo
         route('password.store'), 
         'post', 
         {
-            successMessage: 'Password reset successfully!',
-            resetFields: ['password', 'password_confirmation'],
+            successMessage: 'Password reset successfully!'
         }
     );
 
