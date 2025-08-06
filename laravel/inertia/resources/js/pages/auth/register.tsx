@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
-import { useStatelessForm, handlePasswordErrors } from '@/utils/form';
+import { useStatelessForm } from '@/utils/form';
 
 interface RegisterProps {
     errors?: Record<string, string>;
@@ -19,7 +19,6 @@ export default function Register({ errors = {} }: RegisterProps) {
         {
             successMessage: 'Account created successfully!',
             resetFields: ['password', 'password_confirmation'],
-            onError: handlePasswordErrors
         }
     );
 

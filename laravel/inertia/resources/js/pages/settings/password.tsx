@@ -3,13 +3,13 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useRef } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useStatelessForm, handlePasswordErrors } from '@/utils/form';
+import { useStatelessForm, fieldUtils } from '@/utils/form';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -24,13 +24,26 @@ interface PasswordProps {
 }
 
 export default function Password({ errors = {}, message }: PasswordProps) {
-    const { processing, action } = useStatelessForm(
+    const currentPasswordRef = useRef<HTMLInputElement>(null);
+    const passwordRef = useRef<HTMLInputElement>(null);
+    const passwordConfirmationRef = useRef<HTMLInputElement>(null);
+    
+    const { processing, formRef, action } = useStatelessForm(
         route('password.update'), 
         'put', 
         {
             successMessage: 'Password updated successfully!',
-            resetFields: ['current_password', 'password', 'password_confirmation'],
-            onError: handlePasswordErrors
+            useRefs: true,
+            onError: (errors) => {
+                if (errors.password) {
+                    fieldUtils.clearField(passwordRef);
+                    fieldUtils.clearField(passwordConfirmationRef);
+                    fieldUtils.focusField(passwordRef);
+                }
+                if (errors.current_password) {
+                    fieldUtils.clearAndFocus(currentPasswordRef);
+                }
+            }
         }
     );
 
@@ -42,11 +55,12 @@ export default function Password({ errors = {}, message }: PasswordProps) {
                 <div className="space-y-6">
                     <HeadingSmall title="Update password" description="Ensure your account is using a long, random password to stay secure" />
 
-                    <form action={action} className="space-y-6">
+                    <form ref={formRef} action={action} className="space-y-6">
                         <div className="grid gap-2">
                             <Label htmlFor="current_password">Current password</Label>
 
                             <Input
+                                ref={currentPasswordRef}
                                 id="current_password"
                                 name="current_password"
                                 type="password"
@@ -62,6 +76,7 @@ export default function Password({ errors = {}, message }: PasswordProps) {
                             <Label htmlFor="password">New password</Label>
 
                             <Input
+                                ref={passwordRef}
                                 id="password"
                                 name="password"
                                 type="password"
@@ -77,6 +92,7 @@ export default function Password({ errors = {}, message }: PasswordProps) {
                             <Label htmlFor="password_confirmation">Confirm password</Label>
 
                             <Input
+                                ref={passwordConfirmationRef}
                                 id="password_confirmation"
                                 name="password_confirmation"
                                 type="password"

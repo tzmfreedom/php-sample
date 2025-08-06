@@ -1,5 +1,3 @@
-import { FormEventHandler } from 'react';
-
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,31 +5,33 @@ import { Label } from '@/components/ui/label';
 
 import HeadingSmall from '@/components/heading-small';
 
+import { useRef } from 'react';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { submitForm } from '@/utils/form';
+import { useStatelessForm, fieldUtils } from '@/utils/form';
 
 interface DeleteUserProps {
     errors?: Record<string, string>;
 }
 
 export default function DeleteUser({ errors = {} }: DeleteUserProps) {
-    const deleteUser: FormEventHandler<HTMLFormElement> = (e) => {
-        e.preventDefault();
-        const form = e.currentTarget;
-        
-        submitForm(form, route('profile.destroy'), 'delete', {
+    const passwordRef = useRef<HTMLInputElement>(null);
+    
+    const { processing, formRef, action } = useStatelessForm(
+        route('profile.destroy'), 
+        'delete', 
+        {
+            successMessage: 'Account deleted successfully',
+            useRefs: true,
             onError: (errors) => {
                 if (errors.password) {
-                    const passwordInput = document.getElementById('password') as HTMLInputElement;
-                    passwordInput?.focus();
+                    fieldUtils.focusField(passwordRef);
                 }
             }
-        });
-    };
+        }
+    );
 
     const closeModal = () => {
-        const passwordInput = document.getElementById('password') as HTMLInputElement;
-        if (passwordInput) passwordInput.value = '';
+        fieldUtils.clearField(passwordRef);
     };
 
     return (
@@ -53,13 +53,14 @@ export default function DeleteUser({ errors = {} }: DeleteUserProps) {
                             Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password
                             to confirm you would like to permanently delete your account.
                         </DialogDescription>
-                        <form className="space-y-6" onSubmit={deleteUser}>
+                        <form ref={formRef} className="space-y-6" action={action}>
                             <div className="grid gap-2">
                                 <Label htmlFor="password" className="sr-only">
                                     Password
                                 </Label>
 
                                 <Input
+                                    ref={passwordRef}
                                     id="password"
                                     type="password"
                                     name="password"
@@ -77,7 +78,7 @@ export default function DeleteUser({ errors = {} }: DeleteUserProps) {
                                     </Button>
                                 </DialogClose>
 
-                                <Button variant="destructive" type="submit">
+                                <Button variant="destructive" type="submit" disabled={processing}>
                                     Delete account
                                 </Button>
                             </DialogFooter>

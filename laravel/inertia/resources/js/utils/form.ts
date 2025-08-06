@@ -1,30 +1,26 @@
 import { router } from '@inertiajs/react';
-import { useState, useTransition } from 'react';
+import { useTransition, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
-
-interface FormSubmitOptions {
-    preserveScroll?: boolean;
-    onSuccess?: () => void;
-    onError?: (errors: Record<string, string>) => void;
-    resetFields?: string[];
-}
 
 interface UseFormOptions {
     successMessage?: string;
     resetFields?: string[];
     onSuccess?: () => void;
     onError?: (errors: Record<string, string>) => void;
+    useRefs?: boolean; // refベースモードを有効にするフラグ
 }
 
 // React 19のuseTransitionを使用した統合フォームフック
 export function useStatelessForm(url: string, method: 'get' | 'post' | 'put' | 'patch' | 'delete' = 'post', options: UseFormOptions = {}) {
     const [isPending, startTransition] = useTransition();
+    const formRef = useRef<HTMLFormElement>(null);
     
     const {
         successMessage = 'Saved!',
         resetFields = [],
         onSuccess,
-        onError
+        onError,
+        useRefs = false
     } = options;
 
     // React 19のaction関数
@@ -65,97 +61,46 @@ export function useStatelessForm(url: string, method: 'get' | 'post' | 'put' | '
                         }
                     });
                 });
-            } catch (error) {
+            } catch {
                 // エラーハンドリングは既にonErrorで行われている
             }
         });
     };
 
+    // フォームをリセットするヘルパー関数
+    const resetForm = useCallback(() => {
+        if (formRef.current) {
+            formRef.current.reset();
+        }
+    }, []);
+
     return {
         processing: isPending,
-        action
+        action,
+        ...(useRefs && { formRef, resetForm })
     };
 }
 
-// 成功状態を管理するカスタムフック（後方互換性のため残す）
-export function useRecentlySuccessful(duration: number = 2000) {
-    const [recentlySuccessful, setRecentlySuccessful] = useState(false);
 
-    const setSuccess = () => {
-        setRecentlySuccessful(true);
-        setTimeout(() => setRecentlySuccessful(false), duration);
-    };
-
-    return { recentlySuccessful, setSuccess };
-}
-
-/**
- * ネイティブHTML FormをInertia.jsで送信するためのヘルパー関数
- */
-export function submitForm(
-    form: HTMLFormElement, 
-    url: string, 
-    method: 'get' | 'post' | 'put' | 'patch' | 'delete' = 'post',
-    options: FormSubmitOptions = {}
-) {
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData);
-    
-    const {
-        preserveScroll = true,
-        onSuccess,
-        onError,
-        resetFields = []
-    } = options;
-
-    const routerMethod = router[method].bind(router);
-    
-    routerMethod(url, data, {
-        preserveScroll,
-        onSuccess: () => {
-            // 指定されたフィールドをリセット
-            if (resetFields.length > 0) {
-                resetFields.forEach(fieldName => {
-                    const field = form.querySelector(`[name="${fieldName}"]`) as HTMLInputElement;
-                    if (field) field.value = '';
-                });
-            } else {
-                // 全フィールドをリセット
-                form.reset();
-            }
-            onSuccess?.();
-        },
-        onError: (errors) => {
-            // エラーがあるフィールドをクリア＆フォーカス
-            const errorFields = Object.keys(errors);
-            if (errorFields.length > 0) {
-                const firstErrorField = form.querySelector(`[name="${errorFields[0]}"]`) as HTMLInputElement;
-                if (firstErrorField) {
-                    firstErrorField.focus();
-                }
-            }
-            onError?.(errors);
+// refユーティリティ関数（コンポーネント外で使用）
+export const fieldUtils = {
+    clearField: (fieldRef: React.RefObject<HTMLInputElement | null>) => {
+        if (fieldRef.current) {
+            fieldRef.current.value = '';
         }
-    });
-}
-
-/**
- * パスワードフィールド専用のエラーハンドリング
- */
-export function handlePasswordErrors(errors: Record<string, string>) {
-    if (errors.password) {
-        const passwordInput = document.getElementById('password') as HTMLInputElement;
-        const confirmInput = document.getElementById('password_confirmation') as HTMLInputElement;
-        if (passwordInput) passwordInput.value = '';
-        if (confirmInput) confirmInput.value = '';
-        passwordInput?.focus();
-    }
-
-    if (errors.current_password) {
-        const currentPasswordInput = document.getElementById('current_password') as HTMLInputElement;
-        if (currentPasswordInput) {
-            currentPasswordInput.value = '';
-            currentPasswordInput.focus();
+    },
+    
+    focusField: (fieldRef: React.RefObject<HTMLInputElement | null>) => {
+        if (fieldRef.current) {
+            fieldRef.current.focus();
+        }
+    },
+    
+    clearAndFocus: (fieldRef: React.RefObject<HTMLInputElement | null>) => {
+        if (fieldRef.current) {
+            fieldRef.current.value = '';
+            fieldRef.current.focus();
         }
     }
-}
+};
+
