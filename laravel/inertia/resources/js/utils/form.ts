@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 
 interface FormSubmitOptions {
     preserveScroll?: boolean;
@@ -9,7 +10,7 @@ interface FormSubmitOptions {
 }
 
 interface UseFormOptions {
-    successDuration?: number;
+    successMessage?: string;
     resetFields?: string[];
     onSuccess?: () => void;
     onError?: (errors: Record<string, string>) => void;
@@ -18,19 +19,13 @@ interface UseFormOptions {
 // React 19のuseTransitionを使用した統合フォームフック
 export function useStatelessForm(url: string, method: 'get' | 'post' | 'put' | 'patch' | 'delete' = 'post', options: UseFormOptions = {}) {
     const [isPending, startTransition] = useTransition();
-    const [recentlySuccessful, setRecentlySuccessful] = useState(false);
     
     const {
-        successDuration = 2000,
+        successMessage = 'Saved!',
         resetFields = [],
         onSuccess,
         onError
     } = options;
-
-    const setSuccess = () => {
-        setRecentlySuccessful(true);
-        setTimeout(() => setRecentlySuccessful(false), successDuration);
-    };
 
     // React 19のaction関数
     const action = (formData: FormData) => {
@@ -51,7 +46,8 @@ export function useStatelessForm(url: string, method: 'get' | 'post' | 'put' | '
                                     if (field) field.value = '';
                                 });
                             }
-                            setSuccess();
+                            // トーストで成功メッセージを表示
+                            toast.success(successMessage);
                             onSuccess?.();
                             resolve();
                         },
@@ -77,7 +73,6 @@ export function useStatelessForm(url: string, method: 'get' | 'post' | 'put' | '
 
     return {
         processing: isPending,
-        recentlySuccessful,
         action
     };
 }

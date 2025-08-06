@@ -16,7 +16,10 @@ interface ForgotPasswordProps {
 export default function ForgotPassword({ status, errors = {} }: ForgotPasswordProps) {
     const { processing, action } = useStatelessForm(
         route('password.email'), 
-        'post'
+        'post',
+        {
+            successMessage: 'Password reset email sent!'
+        }
     );
 
     return (

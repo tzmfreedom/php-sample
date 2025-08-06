@@ -28,9 +28,12 @@ interface ProfileProps {
 
 export default function Profile({ mustVerifyEmail, status, errors = {}, message }: ProfileProps) {
     const { auth } = usePage<SharedData>().props;
-    const { processing, recentlySuccessful, action } = useStatelessForm(
+    const { processing, action } = useStatelessForm(
         route('profile.update'), 
-        'patch'
+        'patch',
+        {
+            successMessage: 'Profile updated successfully!'
+        }
     );
 
     return (
@@ -100,10 +103,8 @@ export default function Profile({ mustVerifyEmail, status, errors = {}, message 
                         <div className="flex items-center gap-4">
                             <Button type="submit" disabled={processing}>Save</Button>
 
-                            {(message || recentlySuccessful) && (
-                                <p className="text-sm text-green-600">
-                                    {message || 'Profile updated successfully!'}
-                                </p>
+                            {message && (
+                                <p className="text-sm text-green-600">{message}</p>
                             )}
                         </div>
                     </form>

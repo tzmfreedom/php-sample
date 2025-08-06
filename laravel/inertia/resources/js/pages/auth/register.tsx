@@ -17,6 +17,7 @@ export default function Register({ errors = {} }: RegisterProps) {
         route('register'), 
         'post', 
         {
+            successMessage: 'Account created successfully!',
             resetFields: ['password', 'password_confirmation'],
             onError: handlePasswordErrors
         }

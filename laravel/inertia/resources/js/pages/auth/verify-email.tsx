@@ -12,7 +12,10 @@ interface VerifyEmailProps {
 export default function VerifyEmail({ status }: VerifyEmailProps) {
     const { processing, action } = useStatelessForm(
         route('verification.send'), 
-        'post'
+        'post',
+        {
+            successMessage: 'Verification email sent!'
+        }
     );
 
     return (

@@ -16,6 +16,7 @@ export default function ConfirmPassword({ errors = {} }: ConfirmPasswordProps) {
         route('password.confirm'), 
         'post', 
         {
+            successMessage: 'Password confirmed!',
             resetFields: ['password']
         }
     );

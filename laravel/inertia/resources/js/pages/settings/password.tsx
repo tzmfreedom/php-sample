@@ -24,10 +24,11 @@ interface PasswordProps {
 }
 
 export default function Password({ errors = {}, message }: PasswordProps) {
-    const { processing, recentlySuccessful, action } = useStatelessForm(
+    const { processing, action } = useStatelessForm(
         route('password.update'), 
         'put', 
         {
+            successMessage: 'Password updated successfully!',
             resetFields: ['current_password', 'password', 'password_confirmation'],
             onError: handlePasswordErrors
         }
@@ -90,10 +91,8 @@ export default function Password({ errors = {}, message }: PasswordProps) {
                         <div className="flex items-center gap-4">
                             <Button type="submit" disabled={processing}>Save password</Button>
 
-                            {(message || recentlySuccessful) && (
-                                <p className="text-sm text-green-600">
-                                    {message || 'Password updated successfully!'}
-                                </p>
+                            {message && (
+                                <p className="text-sm text-green-600">{message}</p>
                             )}
                         </div>
                     </form>
