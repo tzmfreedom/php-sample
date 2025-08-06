@@ -1,6 +1,5 @@
 import { type BreadcrumbItem, type SharedData } from '@/types';
-import { Transition } from '@headlessui/react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
 import DeleteUser from '@/components/delete-user';
@@ -11,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { useStatelessForm } from '@/utils/form';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -19,26 +19,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type ProfileForm = {
-    name: string;
-    email: string;
-};
+interface ProfileProps {
+    mustVerifyEmail: boolean;
+    status?: string;
+    errors?: Record<string, string>;
+    message?: string;
+}
 
-export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
+export default function Profile({ mustVerifyEmail, status, errors = {}, message }: ProfileProps) {
     const { auth } = usePage<SharedData>().props;
-
-    const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
-        name: auth.user.name,
-        email: auth.user.email,
-    });
-
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
-
-        patch(route('profile.update'), {
-            preserveScroll: true,
-        });
-    };
+    const { processing, recentlySuccessful, action } = useStatelessForm(
+        route('profile.update'), 
+        'patch'
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -48,15 +41,15 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                 <div className="space-y-6">
                     <HeadingSmall title="Profile information" description="Update your name and email address" />
 
-                    <form onSubmit={submit} className="space-y-6">
+                    <form action={action} className="space-y-6">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Name</Label>
 
                             <Input
                                 id="name"
+                                name="name"
                                 className="mt-1 block w-full"
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
+                                defaultValue={auth.user.name}
                                 required
                                 autoComplete="name"
                                 placeholder="Full name"
@@ -70,10 +63,10 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                             <Input
                                 id="email"
+                                name="email"
                                 type="email"
                                 className="mt-1 block w-full"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
+                                defaultValue={auth.user.email}
                                 required
                                 autoComplete="username"
                                 placeholder="Email address"
@@ -105,17 +98,13 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         )}
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing}>Save</Button>
+                            <Button type="submit" disabled={processing}>Save</Button>
 
-                            <Transition
-                                show={recentlySuccessful}
-                                enter="transition ease-in-out"
-                                enterFrom="opacity-0"
-                                leave="transition ease-in-out"
-                                leaveTo="opacity-0"
-                            >
-                                <p className="text-sm text-neutral-600">Saved</p>
-                            </Transition>
+                            {(message || recentlySuccessful) && (
+                                <p className="text-sm text-green-600">
+                                    {message || 'Profile updated successfully!'}
+                                </p>
+                            )}
                         </div>
                     </form>
                 </div>

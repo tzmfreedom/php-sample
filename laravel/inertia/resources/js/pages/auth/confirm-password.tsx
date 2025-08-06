@@ -1,26 +1,24 @@
-// Components
-import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import { Head } from '@inertiajs/react';
 
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { useStatelessForm } from '@/utils/form';
 
-export default function ConfirmPassword() {
-    const { data, setData, post, processing, errors, reset } = useForm<Required<{ password: string }>>({
-        password: '',
-    });
+interface ConfirmPasswordProps {
+    errors?: Record<string, string>;
+}
 
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
-
-        post(route('password.confirm'), {
-            onFinish: () => reset('password'),
-        });
-    };
+export default function ConfirmPassword({ errors = {} }: ConfirmPasswordProps) {
+    const { processing, action } = useStatelessForm(
+        route('password.confirm'), 
+        'post', 
+        {
+            resetFields: ['password']
+        }
+    );
 
     return (
         <AuthLayout
@@ -29,7 +27,7 @@ export default function ConfirmPassword() {
         >
             <Head title="Confirm password" />
 
-            <form onSubmit={submit}>
+            <form action={action}>
                 <div className="space-y-6">
                     <div className="grid gap-2">
                         <Label htmlFor="password">Password</Label>
@@ -39,9 +37,7 @@ export default function ConfirmPassword() {
                             name="password"
                             placeholder="Password"
                             autoComplete="current-password"
-                            value={data.password}
                             autoFocus
-                            onChange={(e) => setData('password', e.target.value)}
                         />
 
                         <InputError message={errors.password} />
@@ -49,7 +45,6 @@ export default function ConfirmPassword() {
 
                     <div className="flex items-center">
                         <Button className="w-full" disabled={processing}>
-                            {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                             Confirm password
                         </Button>
                     </div>
