@@ -8,7 +8,6 @@ use PHPStan\PhpDocParser\ParserConfig;
 use PHPStan\PhpDocParser\Parser\TypeParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Ast\Type\ArrayShapeNode;
-use PHPStan\PhpDocParser\Ast\Type\ArrayShapeItemNode;
 use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
@@ -22,6 +21,9 @@ use Spatie\TypeScriptTransformer\Attributes\Optional;
 
 class CustomDtoTransformer extends DtoTransformer
 {
+    /**
+     * @param ReflectionClass<object> $class
+     */
     protected function transformProperties(ReflectionClass $class, MissingSymbolsCollection $missingSymbols): string
     {
         $isClassOptional = ! empty($class->getAttributes(Optional::class));
@@ -44,7 +46,7 @@ class CustomDtoTransformer extends DtoTransformer
                 $arrayShapeType = $this->transformArrayShape($property);
                 if ($arrayShapeType !== null) {
                     $propertyName = $this->transformPropertyName($property, $missingSymbols);
-                    
+
                     return $isOptional
                         ? "{$carry}{$propertyName}?: {$arrayShapeType};" . PHP_EOL
                         : "{$carry}{$propertyName}: {$arrayShapeType};" . PHP_EOL;
@@ -94,9 +96,6 @@ class CustomDtoTransformer extends DtoTransformer
                 $typeString = preg_replace('/\s+/', ' ', $typeString);
                 $typeString = trim($typeString);
 
-                // デバッグ用ログ
-                error_log("Parsed type string: " . $typeString);
-
                 $tokens = $lexer->tokenize($typeString);
                 $tokenIterator = new TokenIterator($tokens);
 
@@ -109,53 +108,6 @@ class CustomDtoTransformer extends DtoTransformer
         }
 
         return null;
-    }
-
-    private function parseArrayShapeDefinition(string $shapeDefinition): string
-    {
-        $properties = [];
-        $parts = $this->splitArrayShapeDefinition($shapeDefinition);
-
-        foreach ($parts as $part) {
-            if (preg_match('/^\s*([^:]+):\s*(.+)$/', $part, $matches)) {
-                $key = trim($matches[1]);
-                $type = trim($matches[2]);
-                $tsType = $this->phpTypeToTypeScript($type);
-
-                $properties[] = "{$key}: {$tsType}";
-            }
-        }
-
-        return '{ ' . implode('; ', $properties) . ' }';
-    }
-
-    private function splitArrayShapeDefinition(string $definition): array
-    {
-        $parts = [];
-        $current = '';
-        $depth = 0;
-
-        for ($i = 0; $i < strlen($definition); $i++) {
-            $char = $definition[$i];
-
-            if ($char === '{' || $char === '[') {
-                $depth++;
-            } elseif ($char === '}' || $char === ']') {
-                $depth--;
-            } elseif ($char === ',' && $depth === 0) {
-                $parts[] = trim($current);
-                $current = '';
-                continue;
-            }
-
-            $current .= $char;
-        }
-
-        if (!empty(trim($current))) {
-            $parts[] = trim($current);
-        }
-
-        return $parts;
     }
 
     private function phpTypeToTypeScript(string $phpType): string
@@ -175,7 +127,6 @@ class CustomDtoTransformer extends DtoTransformer
             'bool' => 'boolean',
             'boolean' => 'boolean',
             // Special types
-            'array' => 'any[]',
             'object' => 'object',
             'mixed' => 'any',
             'null' => 'null',
@@ -202,17 +153,6 @@ class CustomDtoTransformer extends DtoTransformer
             return $this->phpTypeToTypeScript($baseType) . ' | null';
         }
 
-        // Handle array types
-        if (str_ends_with($phpType, '[]')) {
-            $baseType = substr($phpType, 0, -2);
-            return $this->phpTypeToTypeScript($baseType) . '[]';
-        }
-
-        // Handle nested array shapes
-        if (preg_match('/array\{([^}]+)\}/', $phpType, $matches)) {
-            return $this->parseArrayShapeDefinition($matches[1]);
-        }
-
         // Use type map if available
         if (isset($typeMap[$phpType])) {
             return $typeMap[$phpType];
@@ -228,21 +168,19 @@ class CustomDtoTransformer extends DtoTransformer
         return $phpType;
     }
 
-    private function convertTypeNodeToTypeScript(TypeNode $typeNode): ?string
+    private function convertTypeNodeToTypeScript(TypeNode $typeNode): string
     {
         if ($typeNode instanceof ArrayShapeNode) {
             $properties = [];
 
             foreach ($typeNode->items as $item) {
-                if ($item instanceof ArrayShapeItemNode) {
-                    $key = $item->keyName ? (string) $item->keyName : '';
-                    $valueType = $this->convertTypeNodeToTypeScript($item->valueType);
+                $key = $item->keyName ? (string) $item->keyName : '';
+                $valueType = $this->convertTypeNodeToTypeScript($item->valueType);
 
-                    if ($key && $valueType) {
-                        // クォートを削除
-                        $key = trim($key, '"\'');
-                        $properties[] = "{$key}: {$valueType}";
-                    }
+                if ($key && $valueType) {
+                    // クォートを削除
+                    $key = trim($key, '"\'');
+                    $properties[] = "{$key}: {$valueType}";
                 }
             }
 
@@ -263,6 +201,9 @@ class CustomDtoTransformer extends DtoTransformer
     }
 
 
+    /**
+     * @param ReflectionClass<object> $class
+     */
     public function canTransform(ReflectionClass $class): bool
     {
         return $class->isSubclassOf(Data::class);

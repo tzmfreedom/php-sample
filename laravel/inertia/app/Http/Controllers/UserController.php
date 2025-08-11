@@ -9,6 +9,10 @@ use Inertia\Inertia;
 
 class UserController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return \Inertia\Response
+     */
     public function index(Request $request)
     {
         $users = User::query()
